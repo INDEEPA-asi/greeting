@@ -1,0 +1,123 @@
+@theme inline {
+  --font-sans: "DM Sans Variable", system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond Variable", Georgia, serif;
+  --font-script: "Caveat Variable", cursive;
+  --color-ivory: var(--ivory);
+  --color-plum: var(--plum);
+  --color-rose: var(--rose);
+  --color-gold: var(--gold);
+}
+
+:root {
+  --ivory: #fff8f5;
+  --blush: #f5d5df;
+  --dusty: #d88fa6;
+  --rose: #a14e68;
+  --gold: #c9a46b;
+  --plum: #402a37;
+  --white: #fffcfa;
+  --night: #190e16;
+  --muted-ink: #6e4e5d;
+  --gold-ink: #77532f;
+  --font-editorial: "Cormorant Garamond Variable", Georgia, serif;
+  --font-hand: "Caveat Variable", cursive;
+}
+
+html { background: var(--night); }
+body { margin: 0; min-width: 0; font-family: var(--font-sans); }
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+[data-scene-heading]:focus { outline: none; }
+[hidden] { display: none !important; }
+::selection { background: var(--blush); color: #402a37; }
+
+.garden {
+  --surface: var(--ivory);
+  --ink: var(--plum);
+  --quiet: var(--muted-ink);
+  --accent: var(--gold-ink);
+  --line: #8b5c6540;
+  min-height: 100svh;
+  color: var(--ink);
+  background-color: var(--surface);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+}
+.garden[data-tone="dark"] { --surface: var(--night); --ink: var(--ivory); --quiet: #e0c0c9; --accent: #e8c58e; --line: #dbad7940; }
+.garden main { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.garden [data-scene-heading], .garden h2, .garden h3 { font-family: var(--font-editorial); }
+.scene {
+  --scene-edge: clamp(1.05rem, 5vw, 4rem);
+  width: min(100%, 78rem);
+  margin-inline: auto;
+  padding: clamp(2.5rem, 7vw, 5.75rem) max(var(--scene-edge), env(safe-area-inset-right))
+    clamp(2.5rem, 7vw, 5.75rem) max(var(--scene-edge), env(safe-area-inset-left));
+}
+.scene-title { text-align: center; max-width: 50rem; margin: 0 auto clamp(1.55rem, 4vw, 3.15rem); }
+.eyebrow { color: var(--accent); font-size: .76rem; font-weight: 650; letter-spacing: .24em; text-transform: uppercase; }
+.scene-title h1 { font-size: clamp(3rem, 7.1vw, 6rem); line-height: .88; font-weight: 560; letter-spacing: -.04em; text-wrap: balance; margin: .55rem 0 0; overflow-wrap: anywhere; }
+.scene-subtitle { color: var(--quiet); line-height: 1.65; margin: .9rem auto 0; max-width: 44ch; text-wrap: pretty; }
+.ornament { display: flex; align-items: center; justify-content: center; gap: .55rem; color: var(--accent); margin: .65rem auto; }
+.ornament span { width: 2.2rem; height: 1px; background: currentColor; opacity: .48; }
+.button, .text-button, .icon-button {
+  min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
+  gap: .55rem; font-size: .875rem; font-weight: 650; line-height: 1.25; text-align: center;
+}
+.button { border-radius: 999px; border: 1px solid var(--line); padding: .68rem 1.25rem; transition: background-color .2s, transform .2s; }
+.button:hover:not(:disabled) { transform: translateY(-2px); }
+.button.primary { color: #321c27; border-color: #d2a3ae; background: linear-gradient(110deg, var(--ivory), var(--blush)); box-shadow: 0 5px 22px #b3647c35; }
+.garden[data-tone="light"] .button.primary { color: #fff8f5; background: #824055; border-color: #824055; }
+.button.ghost { background: color-mix(in srgb, var(--surface) 45%, transparent); }
+.button:disabled, .text-button:disabled { opacity: .58; }
+.text-button { text-decoration: underline; text-decoration-color: currentColor; text-underline-offset: .24em; padding-inline: .35rem; color: inherit; }
+.icon-button { min-width: 44px; border: 1px solid var(--line); border-radius: 50%; }
+.action-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .65rem; }
+.quiet { color: var(--quiet); }
+.hand { font-family: var(--font-hand); }
+.status { color: var(--quiet); font-size: .875rem; line-height: 1.5; }
+.visually-hidden-link { position: fixed; top: .6rem; left: .6rem; z-index: 100; transform: translateY(-150%); padding: .6rem 1rem; color: #321c27; background: #fff8f5; }
+.visually-hidden-link:focus { transform: none; }
+
+.garden-dialog {
+  --surface: var(--ivory); --ink: var(--plum); --quiet: var(--muted-ink); --line: #8b5c6560;
+  position: fixed; inset: 0; z-index: 30; margin: auto; padding: 0; width: min(42rem, calc(100% - 1.5rem));
+  max-height: calc(100svh - 1.5rem); overflow: auto; overscroll-behavior: contain;
+  color: var(--ink); border-radius: 1.1rem; border: 1px solid var(--gold);
+  background: var(--surface); box-shadow: 0 15px 90px #13091285;
+}
+.garden-dialog::backdrop { background: #190e16cf; }
+.dialog-inner { position: relative; padding: clamp(1.2rem, 4vw, 2.4rem); }
+.dialog-inner h2 { font-family: var(--font-editorial); font-size: clamp(1.8rem, 6vw, 2.8rem); line-height: 1; padding-right: 3rem; margin-bottom: 1rem; text-wrap: balance; }
+.dialog-close { position: absolute; right: .65rem; top: .65rem; background-color: var(--surface); }
+.gilded-frame { position: absolute; inset: 0; pointer-events: none; border: 1px solid #d3a97641; }
+.corner { position: absolute; width: clamp(30px, 5vw, 62px); color: var(--gold); stroke: currentColor; stroke-width: .8; opacity: .75; }
+.corner.tl { top: -1px; left: -1px; }
+.corner.tr { top: -1px; right: -1px; transform: scaleX(-1); }
+.corner.bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
+.corner.br { bottom: -1px; right: -1px; transform: scale(-1); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+.garden[data-reduced="true"], .garden[data-reduced="true"] *, .garden[data-reduced="true"] *::before, .garden[data-reduced="true"] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: .001ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .001ms !important;
+  transition-delay: 0ms !important;
+}
+.garden[data-hidden="true"] *, .garden[data-hidden="true"] *::before, .garden[data-hidden="true"] *::after { animation-play-state: paused !important; }
