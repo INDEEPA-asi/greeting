@@ -7,6 +7,7 @@ type AudioSettings = {
   volume: number;
   enabled: boolean;
   error: string;
+  startOnEntry: () => void;
   toggle: () => void;
   select: (id: string) => void;
   setVolume: (volume: number) => void;
@@ -21,9 +22,7 @@ export function useAudio() {
   return audio;
 }
 
-export function AudioProvider({ tracks, selected, autoplay = false, children }: {
-  tracks: Track[]; selected?: string; autoplay?: boolean; children: ReactNode;
-}) {
+export function AudioProvider({ tracks, selected, children }: { tracks: Track[]; selected?: string; children: ReactNode }) {
   const [selectedId, setSelectedId] = useState(selected);
   const activeTrack = tracks.find(({ id }) => id === selectedId) ?? tracks[0];
   const [enabled, setEnabled] = useState(false);
@@ -33,8 +32,7 @@ export function AudioProvider({ tracks, selected, autoplay = false, children }: 
   const frame = useRef(0);
   const playingMedia = useRef(new Set<HTMLMediaElement>());
   const requested = useRef(false);
-  const awaitingGesture = useRef(false);
-  const initialPlayback = useRef(false);
+  const musicChoiceMade = useRef(false);
   const playVersion = useRef(0);
   const source = activeTrack?.src;
 
@@ -59,13 +57,12 @@ export function AudioProvider({ tracks, selected, autoplay = false, children }: 
   const fail = useCallback((message: string) => {
     if (!requested.current) return;
     requested.current = false;
-    awaitingGesture.current = false;
     cancelAnimationFrame(frame.current);
     setEnabled(false);
     setError(message);
   }, []);
 
-  const play = useCallback((node: HTMLAudioElement, src: string, target: number, automatic = false) => {
+  const play = useCallback((node: HTMLAudioElement, src: string, target: number) => {
     const version = ++playVersion.current;
     cancelAnimationFrame(frame.current);
     if (node.getAttribute('src') !== src) node.src = src;
@@ -74,30 +71,35 @@ export function AudioProvider({ tracks, selected, autoplay = false, children }: 
 
     void Promise.resolve(node.play()).then(() => {
       if (version !== playVersion.current || !requested.current || document.hidden) return;
-      awaitingGesture.current = false;
       setEnabled(true);
       fade(node, target * (playingMedia.current.size ? .2 : 1));
-    }, (cause: unknown) => {
+    }, () => {
       if (version !== playVersion.current || !requested.current || document.hidden) return;
-      if (automatic && cause instanceof DOMException && cause.name === 'NotAllowedError') {
-        awaitingGesture.current = true;
-        setEnabled(false);
-        return;
-      }
       fail('Music could not play. Try again or select another track.');
     });
   }, [fade, fail]);
 
+  function start(node: HTMLAudioElement, src: string) {
+    requested.current = true;
+    setError('');
+    play(node, src, volume);
+  }
+
+  function startOnEntry() {
+    const node = player.current;
+    if (!node || !source || musicChoiceMade.current) return;
+    musicChoiceMade.current = true;
+    start(node, source);
+  }
+
   function toggle() {
     const node = player.current;
     if (!node || !source) return;
-    initialPlayback.current = true;
-    awaitingGesture.current = false;
-    requested.current = !enabled;
-    if (requested.current) {
-      setError('');
-      play(node, source, volume);
+    musicChoiceMade.current = true;
+    if (!enabled) {
+      start(node, source);
     } else {
+      requested.current = false;
       cancelPlayback();
       setEnabled(false);
       fade(node, 0, () => node.pause());
@@ -111,7 +113,6 @@ export function AudioProvider({ tracks, selected, autoplay = false, children }: 
     setError('');
     const node = player.current;
     if (!node || !requested.current || node.getAttribute('src') === chosen.src) return;
-    awaitingGesture.current = false;
     node.pause();
     play(node, chosen.src, volume);
   }
@@ -124,43 +125,18 @@ export function AudioProvider({ tracks, selected, autoplay = false, children }: 
 
   useEffect(() => {
     const node = player.current;
-    if (!source || !node) return;
-    let cancelled = false;
-    if (autoplay && !initialPlayback.current) {
-      // Run after the mount has settled so React's development cleanup cannot start a second track.
-      queueMicrotask(() => {
-        if (cancelled || initialPlayback.current) return;
-        initialPlayback.current = true;
-        requested.current = true;
-        awaitingGesture.current = true;
-        if (!document.hidden) play(node, source, volume, true);
-      });
-    }
-
-    function firstInteraction(event: MouseEvent) {
-      if (!event.isTrusted || !requested.current || !awaitingGesture.current || document.hidden) return;
-      if (event.target instanceof Element && event.target.closest('.music-toggle')) return;
-      awaitingGesture.current = false;
-      if (node && source) play(node, source, volume);
-    }
-
     function visibilityChanged() {
       if (document.hidden) {
         cancelPlayback();
         node?.pause();
         [...playingMedia.current].forEach((element) => element.pause());
       } else if (node && source && requested.current) {
-        play(node, source, volume, autoplay);
+        play(node, source, volume);
       }
     }
-    document.addEventListener('click', firstInteraction);
     document.addEventListener('visibilitychange', visibilityChanged);
-    return () => {
-      cancelled = true;
-      document.removeEventListener('click', firstInteraction);
-      document.removeEventListener('visibilitychange', visibilityChanged);
-    };
-  }, [autoplay, cancelPlayback, play, source, volume]);
+    return () => document.removeEventListener('visibilitychange', visibilityChanged);
+  }, [cancelPlayback, play, source, volume]);
 
   useEffect(() => {
     const node = player.current;
@@ -176,7 +152,7 @@ export function AudioProvider({ tracks, selected, autoplay = false, children }: 
 
   return (
     <Context.Provider value={{
-      tracks, activeTrack, volume, enabled, error, toggle, select,
+      tracks, activeTrack, volume, enabled, error, startOnEntry, toggle, select,
       setVolume: (value) => {
         setVolume(value);
         if (requested.current && player.current) fade(player.current, value * (playingMedia.current.size ? .2 : 1));

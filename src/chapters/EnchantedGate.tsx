@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { ValidatedBirthday } from '../config/schema';
+import { useAudio } from '../app/providers/AudioProvider';
 import { GildedFrame, Ornament } from '../components/ui/Ornaments';
 
 export function EnchantedGate({ config, enter, busy }: { config: ValidatedBirthday; enter?: () => void; busy: boolean }) {
   const [loading, setLoading] = useState(true);
+  const { startOnEntry } = useAudio();
   const ready = () => setLoading(false);
   return (
     <section className={`gate ${busy ? 'gate-opening' : ''}`}>
@@ -26,7 +28,11 @@ export function EnchantedGate({ config, enter, busy }: { config: ValidatedBirthd
         <Ornament />
         <h1 tabIndex={-1} data-scene-heading>{config.opening.firstLine}<em>{config.opening.secondLine}</em></h1>
         <p className="gate-subtitle">{config.opening.message}</p>
-        {enter && <button className="button primary gate-button" type="button" aria-disabled={busy} onClick={enter}>
+        {enter && <button className="button primary gate-button" type="button" aria-disabled={busy} onClick={() => {
+          if (busy) return;
+          startOnEntry();
+          enter();
+        }}>
           Enter Our Garden <ChevronRight size={17} strokeWidth={1.5} />
         </button>}
         {loading && <span className="gate-loading" role="status">Preparing the garden…</span>}

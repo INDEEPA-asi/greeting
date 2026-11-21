@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Open the Local URL printed by Vite. Append `/personalize` to open the development-only editor for names, photos, messages, and other settings. The story starts background music on opening when the browser permits audible autoplay. Otherwise it starts with the first click or tap, such as **Enter Our Garden**. Use the music switch to turn it off.
+Open the Local URL printed by Vite. Append `/personalize` to open the development-only editor for names, photos, messages, and other settings. The garden opens quietly. Select **Enter Our Garden** to start the background music, or use the music switch to control it at any time. **Skip intro** keeps the current music setting.
 
 ```sh
 npm run lint
@@ -75,7 +75,7 @@ The first scene targets at most 125 KiB gzipped JavaScript, 15 KiB gzipped CSS, 
 | `src/app/navigation/chapters.ts` | Chapter order, visual tone, and transition durations |
 | `src/app/navigation/reducer.ts` | Pure navigation state machine and stale-event protection |
 | `src/app/navigation/ChapterTransition.tsx` | Cover and uncover effects, completion, cancellation, and browser fallback |
-| `src/app/providers/AudioProvider.tsx` | Music autoplay and first-interaction fallback, volume fades, track changes, and ducking |
+| `src/app/providers/AudioProvider.tsx` | Entry-triggered music, the music switch, volume fades, track changes, and ducking |
 | `src/app/PersonalizationEditor.tsx` | Visual editor sections, draft validation, preview, and download |
 | `src/app/editor.css` | Responsive editor layout and form styles |
 | `src/app/personalization/StoryPanels.tsx` | Identity, chapter visibility, message, and theme forms |
@@ -127,7 +127,7 @@ The first scene targets at most 125 KiB gzipped JavaScript, 15 KiB gzipped CSS, 
 | `src/test/components.test.tsx` | Component, input, focus, and fallback tests |
 | `e2e/story.spec.ts` | Full story, keyboard, responsiveness, axe, failure paths, and card export |
 | `e2e/personalize.spec.ts` | Editor fields, local attachments, story preview, and ZIP contents |
-| `e2e/audio.spec.ts` | Startup playback, first-click fallback, and the music switch |
+| `e2e/audio.spec.ts` | Gate-triggered playback, quiet entry paths, and the music switch |
 | `scripts/audit.mjs` | Repeatable mobile Lighthouse audit |
 | `BUILD-LOG.md` | Phase inventory, verification, and artwork provenance |
 
