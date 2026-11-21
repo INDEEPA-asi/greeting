@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Open the Local URL printed by Vite. Append `/personalize` to open the development-only editor. Music starts off and plays only after a deliberate click on its toggle.
+Open the Local URL printed by Vite. Append `/personalize` to open the development-only editor for names, photos, messages, and other settings. Music starts off and plays only after a deliberate click on its toggle.
 
 ```sh
 npm run lint
@@ -22,11 +22,11 @@ npm run test:e2e
 npm run audit:site
 ```
 
-Playwright starts a local server for the production build. The Lighthouse command audits the built gate in simulated mobile Chrome and writes `.lighthouse/mobile.html`. Its minimum scores are 90 for performance and 95 for accessibility. The browser suite also checks WCAG A/AA rules across the story and tests layout at 320, 390, 667 landscape, 768, and 1440 pixels. To inspect `dist/` manually, run `npm run preview`.
+Playwright starts local servers for the production story and the development editor. The Lighthouse command audits the built gate in simulated mobile Chrome and writes `.lighthouse/mobile.html`. Its minimum scores are 90 for performance and 95 for accessibility. The browser suite also checks WCAG A/AA rules across the story and tests layout at 320, 390, 667 landscape, 768, and 1440 pixels. To inspect `dist/` manually, run `npm run preview`.
 
 ## Personalization
 
-Edit [src/config/birthday.ts](src/config/birthday.ts), using [the demo configuration](src/config/birthday.example.ts) as a guide. Keep the validation exports at the bottom of the file. Set `demo: false` when you have replaced the sample content. Invalid configuration produces a visible notice and loads the demo garden.
+Use the [personalization editor](#personalization-editor) for the quickest setup. For direct edits, open [src/config/birthday.ts](src/config/birthday.ts) and use [the demo configuration](src/config/birthday.example.ts) as a guide. Keep the validation exports at the bottom of the file. Set `demo: false` when you have replaced the sample content. Invalid configuration produces a visible notice in the story and loads the demo garden.
 
 1. Set `girlfriendName`, `senderName`, `birthdayDate`, and `timezone`. Enter the birthday in `YYYY-MM-DD` format. The story is available year-round. The “Birthday today” label compares the month and day in the configured time zone.
 2. Edit `opening`, `subtitles`, `candleMessage`, `letter`, `wishMessage`, and `finale.message`. Each item in `letter` becomes its own paragraph.
@@ -38,9 +38,14 @@ Edit [src/config/birthday.ts](src/config/birthday.ts), using [the demo configura
 
 For responsive photographs, set `width` to the original image’s pixel width and add smaller versions to `variants`. For example, a 1440 px original can include a 480 px and a 960 px WebP. A single photograph without variants works too. Use MP3, WAV, or AAC audio and MP4 video for broad compatibility. Personal media is served locally by default. An explicit HTTPS path contacts the named host. A remote photo needs an appropriate CORS header to appear on the exported card. The card uses a rose illustration if the photo is missing, blocked, or too slow to load.
 
-### Development preview
+### Personalization editor
 
-At `/personalize`, edit the JSON and use **Add to preview** to associate a local file with the same path used in the JSON. **Preview story** opens the in-memory version. **Export birthday.ts** prepares a replacement for `src/config/birthday.ts`. Copy chosen files into `public/` yourself. Preview selections are cleared on reload and never written to the source directory.
+1. Run `npm run dev` and open `/personalize` on the Local URL. Start with **Basics**, then use **Photos** to select several scrapbook pictures at once or add the finale photo. Add a useful description in each photo’s alt text field.
+2. Use **Messages** for the letter and other copy, **Timeline** for milestones, and **Gifts** or **Music** to choose recordings and songs directly from your device. A voice or video gift needs a transcript.
+3. Select **Preview story** to try your changes, then **Back to editing** to return to your draft. Turn off **Show the demo label** after replacing the sample content.
+4. Select **Download personalization**. Extract `lovverse-personalization.zip` into the LOVVERSE project folder next to `package.json`, merging its folders. It contains a replacement `src/config/birthday.ts` and the newly attached media in the matching `public/` folders. Keep a copy of the earlier configuration if you want to restore it.
+
+Edits and attachments live in the open tab until you download the ZIP. The editor reads media locally and leaves your project files untouched until you apply the downloaded archive. Once applied, re-run `npm run dev` to review the updated gift or `npm run build` to rebuild it for Netlify.
 
 ## Deploy to Netlify
 
@@ -71,8 +76,13 @@ The first scene targets at most 125 KiB gzipped JavaScript, 15 KiB gzipped CSS, 
 | `src/app/navigation/reducer.ts` | Pure navigation state machine and stale-event protection |
 | `src/app/navigation/ChapterTransition.tsx` | Cover and uncover effects, completion, cancellation, and browser fallback |
 | `src/app/providers/AudioProvider.tsx` | Music consent, volume fading, track changes, ducking, and media lifecycle |
-| `src/app/PersonalizationEditor.tsx` | Local file preview, configuration validation, and TypeScript export |
-| `src/app/editor.css` | Preview editor layout |
+| `src/app/PersonalizationEditor.tsx` | Visual editor sections, draft validation, preview, and download |
+| `src/app/editor.css` | Responsive editor layout and form styles |
+| `src/app/personalization/StoryPanels.tsx` | Identity, chapter visibility, message, and theme forms |
+| `src/app/personalization/MediaPanels.tsx` | Scrapbook, finale, timeline, gift, and music forms |
+| `src/app/personalization/EditorFields.tsx` | Shared fields, file pickers, thumbnails, and list controls |
+| `src/app/personalization/assets.ts` | Local media paths, configuration serialization, and used-asset tracking |
+| `src/app/personalization/export.ts` | Local ZIP archive with configuration and referenced attachments |
 | `src/chapters/EnchantedGate.tsx` | First-scene rosebud, lighting, and entry |
 | `src/chapters/BirthdayBloom.tsx` | Candle interaction, date, and birthday message |
 | `src/chapters/MemoryGarden.tsx` | Scrapbook cards and empty state |
@@ -113,6 +123,7 @@ The first scene targets at most 125 KiB gzipped JavaScript, 15 KiB gzipped CSS, 
 | `src/test/navigation.test.ts` | Reducer and unlock tests |
 | `src/test/components.test.tsx` | Component, input, focus, and fallback tests |
 | `e2e/story.spec.ts` | Full story, keyboard, responsiveness, axe, failure paths, and card export |
+| `e2e/personalize.spec.ts` | Editor fields, local attachments, story preview, and ZIP contents |
 | `scripts/audit.mjs` | Repeatable mobile Lighthouse audit |
 | `BUILD-LOG.md` | Phase inventory, verification, and artwork provenance |
 

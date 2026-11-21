@@ -1,0 +1,6 @@
+LOVVERSE personalization
+
+Extract the contents into the root of your LOVVERSE project, next to package.json.
+The archive includes a replacement for src/config/birthday.ts and any locally selected media still used by it.
+Keep a copy of your earlier birthday.ts if you want to restore it.
+Run npm run dev to review the result, or npm run build to create the updated Netlify build.
