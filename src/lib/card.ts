@@ -1,102 +1,81 @@
 import type { ValidatedBirthday } from '../config/schema';
+import { cardDivider, cardInks, cardPaper, cardPortrait } from './cardArt';
+import { cardFaces, drawCardText, fitCardText, loadCardFonts, measureCardText } from './cardTypography';
+
+const width = 1200;
+const minHeight = 1600;
+const maxHeight = 4096;
+const center = width / 2;
+const roseArtwork = '/images/decorations/rose-garden.webp';
 
 function loadPhoto(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const image = new Image();
     const finish = (value: HTMLImageElement | null) => {
-      clearTimeout(deadline);
+      window.clearTimeout(deadline);
       image.onload = null;
       image.onerror = null;
       resolve(value);
     };
-    const deadline = window.setTimeout(() => finish(null), 2400);
-    if (!src.startsWith('/') && !src.startsWith('blob:')) image.crossOrigin = 'anonymous';
-    image.onload = () => finish(image);
+    const deadline = window.setTimeout(() => finish(null), 3000);
+    if (!src.startsWith('blob:')) image.crossOrigin = 'anonymous';
+    image.onload = () => finish(image.naturalWidth && image.naturalHeight ? image : null);
     image.onerror = () => finish(null);
     image.src = src;
   });
 }
 
-function wrap(context: CanvasRenderingContext2D, text: string, width: number) {
-  const lines: string[] = [];
-  let line = '';
-  for (const word of text.split(/\s+/)) {
-    const candidate = line ? `${line} ${word}` : word;
-    if (line && context.measureText(candidate).width > width) { lines.push(line); line = word; }
-    else line = candidate;
-  }
-  return [...lines, line];
+async function cardImage(src?: string) {
+  const keepsake = src ? await loadPhoto(src) : null;
+  return { image: keepsake ?? await loadPhoto(roseArtwork), keepsake: !!keepsake };
 }
 
 export async function birthdayCard(config: ValidatedBirthday) {
   const canvas = document.createElement('canvas');
-  canvas.width = 1200;
-  canvas.height = 1600;
+  canvas.width = width;
   const context = canvas.getContext('2d');
   if (!context || typeof canvas.toBlob !== 'function') throw new Error('Canvas export unavailable');
 
-  const photo = config.finale.photo ? await loadPhoto(config.finale.photo.src) : null;
-  const editor = '"Cormorant Garamond Variable", Georgia, serif';
-  try { await document.fonts?.load(`600 82px ${editor}`); } catch { /* Georgia remains available. */ }
-  const { ivory, blush, dusty, rose, gold, plum } = config.theme;
-  const backdrop = context.createLinearGradient(0, 0, 1200, 1600);
-  backdrop.addColorStop(0, ivory);
-  backdrop.addColorStop(1, blush);
-  context.fillStyle = backdrop;
-  context.fillRect(0, 0, 1200, 1600);
-  context.strokeStyle = gold;
-  context.lineWidth = 2;
-  context.strokeRect(47, 47, 1106, 1506);
-  context.strokeRect(61, 61, 1078, 1478);
-
+  const fontSample = `LOVVERSE Happy Birthday With love I’d still choose you ${config.girlfriendName} ${config.senderName} ${config.finale.message.slice(0, 2000)}`;
+  const [{ image, keepsake }] = await Promise.all([cardImage(config.finale.photo?.src), loadCardFonts(fontSample)]);
   context.textAlign = 'center';
-  context.fillStyle = plum;
-  context.font = '500 25px system-ui';
-  context.fillText('L O V V E R S E   ·   R O S E   G A R D E N', 600, 146, 900);
-  context.font = `600 92px ${editor}`;
-  context.fillText('Happy Birthday,', 600, 254, 990);
-  context.fillText(config.girlfriendName, 600, 346, 990);
+  context.textBaseline = 'alphabetic';
 
-  const frame = { x: 280, y: 405, width: 640, height: 405 };
-  context.strokeStyle = gold;
-  context.strokeRect(frame.x - 8, frame.y - 8, frame.width + 16, frame.height + 16);
-  if (photo) {
-    const scale = Math.max(frame.width / photo.width, frame.height / photo.height);
-    const cropWidth = frame.width / scale;
-    const cropHeight = frame.height / scale;
-    context.drawImage(photo, (photo.width - cropWidth) / 2, (photo.height - cropHeight) / 2, cropWidth, cropHeight,
-      frame.x, frame.y, frame.width, frame.height);
-  } else {
-    context.fillStyle = ivory;
-    context.fillRect(frame.x, frame.y, frame.width, frame.height);
-    context.strokeStyle = rose;
-    context.lineWidth = 4;
-    context.beginPath();
-    context.moveTo(595, 748); context.quadraticCurveTo(629, 673, 604, 596); context.stroke();
-    context.fillStyle = rose;
-    context.beginPath(); context.ellipse(572, 684, 32, 12, .65, 0, 2 * Math.PI); context.fill();
-    context.beginPath(); context.ellipse(632, 665, 28, 11, -.6, 0, 2 * Math.PI); context.fill();
-    for (let i = 0; i < 15; i++) {
-      const angle = i * 2.4;
-      const spread = 65 - i * 3.7;
-      context.fillStyle = i % 3 === 0 ? rose : dusty;
-      context.beginPath();
-      context.ellipse(600 + Math.sin(angle) * spread, 550 + Math.cos(angle) * spread * .65, 48 - i * 1.8, 25 - i, angle, 0, 2 * Math.PI);
-      context.fill();
-    }
-  }
+  const brand = measureCardText(context, 'L O V V E R S E   ·   R O S E   G A R D E N', cardFaces.label, 23, 850);
+  const title = measureCardText(context, 'Happy Birthday,', cardFaces.title, 100, 940);
+  const name = fitCardText(context, config.girlfriendName, cardFaces.name, 122, 48, 920, 164);
+  const vow = measureCardText(context, 'In every lifetime,\nI’d still choose you.', cardFaces.verse, 61, 900);
+  const signoff = measureCardText(context, 'With love,', cardFaces.label, 24, 860);
+  const signature = fitCardText(context, config.senderName, cardFaces.signature, 60, 32, 860, 105);
 
-  context.fillStyle = plum;
-  context.font = `600 italic 63px ${editor}`;
-  context.fillText('In every lifetime,', 600, 930, 990);
-  context.fillText('I’d still choose you.', 600, 994, 990);
-  context.font = `500 44px ${editor}`;
-  const lines = wrap(context, config.finale.message, 900);
-  const visible = lines.slice(0, 6);
-  if (lines.length > 6) visible[5] += '…';
-  visible.forEach((line, index) => context.fillText(line, 1080 + index * 49, 920));
-  context.font = '500 30px system-ui';
-  context.fillText(`With love, ${config.senderName}`, 600, 1450, 990);
+  const titleTop = 147;
+  const nameTop = titleTop + title.height + 1;
+  const frameWidth = keepsake && image && image.naturalHeight > image.naturalWidth * 1.12 ? 560 : 808;
+  const frame = { x: center - frameWidth / 2, y: nameTop + name.height + 34, width: frameWidth, height: 463 };
+  const vowTop = frame.y + frame.height + 54;
+  const messageTop = vowTop + vow.height + 25;
+  const signatureSpace = 36 + signoff.height + 8 + signature.height + 103;
+  const message = measureCardText(context, config.finale.message, cardFaces.body, 42, 840, maxHeight - messageTop - signatureSpace);
+
+  const signoffTop = Math.max(1346, messageTop + message.height + 36);
+  const signatureTop = signoffTop + signoff.height + 8;
+  canvas.height = Math.max(minHeight, Math.ceil(signatureTop + signature.height + 103));
+
+  cardPaper(context, width, canvas.height, config.theme);
+  cardPortrait(context, frame, image, keepsake, config.theme);
+  const { ink, rose, gold } = cardInks(config.theme);
+  context.textAlign = 'center';
+  context.textBaseline = 'alphabetic';
+  drawCardText(context, brand, center, 79, rose);
+  cardDivider(context, center, 128, gold);
+  drawCardText(context, title, center, titleTop, ink);
+  drawCardText(context, name, center, nameTop, rose);
+  drawCardText(context, vow, center, vowTop, rose);
+  drawCardText(context, message, center, messageTop, ink);
+  drawCardText(context, signoff, center, signoffTop, ink);
+  drawCardText(context, signature, center, signatureTop, rose);
+  cardDivider(context, center, canvas.height - 76, gold);
+
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('No image could be created.')), 'image/png');
   });

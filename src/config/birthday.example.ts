@@ -52,7 +52,7 @@ export const birthdayExample = {
     'However today unfolds, I hope you have a moment to feel how deeply you are loved.',
   ],
   gifts: [
-    { type: 'text', title: 'A Little Promise', fallback: 'I hope we always make time for the small things.', message: 'Here’s to making time for the small things, and saying what matters while we have the chance.' },
+    { type: 'text', title: 'A Little Promise', fallback: 'I hope we always make time for the small things.', message: 'I promise to value our differences and work on them until they become our strengths as a couple.' },
     { type: 'photo', title: 'A Pocketful of Roses', fallback: 'A bouquet for you, in every season.', photo: bouquet },
     { type: 'voice', title: 'Something to Keep', fallback: 'Wherever this year takes you, I hope you find a little more of what makes you feel like yourself.' },
   ],

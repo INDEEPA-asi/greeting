@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Open the Local URL printed by Vite. Append `/personalize` to open the development-only editor for names, photos, messages, and other settings. Music starts off and plays only after a deliberate click on its toggle.
+Open the Local URL printed by Vite. Append `/personalize` to open the development-only editor for names, photos, messages, and other settings. The story starts background music on opening when the browser permits audible autoplay. Otherwise it starts with the first click or tap, such as **Enter Our Garden**. Use the music switch to turn it off.
 
 ```sh
 npm run lint
@@ -22,7 +22,7 @@ npm run test:e2e
 npm run audit:site
 ```
 
-Playwright starts local servers for the production story and the development editor. The Lighthouse command audits the built gate in simulated mobile Chrome and writes `.lighthouse/mobile.html`. Its minimum scores are 90 for performance and 95 for accessibility. The browser suite also checks WCAG A/AA rules across the story and tests layout at 320, 390, 667 landscape, 768, and 1440 pixels. To inspect `dist/` manually, run `npm run preview`.
+Playwright builds an isolated story and starts a development editor, both with the bundled demo configuration. This keeps browser checks repeatable while the regular build uses your personalized content. The Lighthouse command audits the built gate in simulated mobile Chrome and writes `.lighthouse/mobile.html`. Its minimum scores are 90 for performance and 95 for accessibility. The browser suite also checks WCAG A/AA rules across the story and tests layout at 320, 390, 667 landscape, 768, and 1440 pixels. To inspect `dist/` manually, run `npm run preview`.
 
 ## Personalization
 
@@ -36,7 +36,7 @@ Use the [personalization editor](#personalization-editor) for the quickest setup
 6. Copy music and voice recordings into `public/audio/` and videos into `public/videos/`. Add background tracks with an `id`, `title`, and `src`. Set `audio.selected` to the ID of the starting track. An empty `tracks` array disables the music toggle.
 7. Change the hex values in `theme` and check contrast for your choices. Set a key in `enabled` to `false` to hide that chapter. The story skips disabled chapters automatically.
 
-For responsive photographs, set `width` to the original image’s pixel width and add smaller versions to `variants`. For example, a 1440 px original can include a 480 px and a 960 px WebP. A single photograph without variants works too. Use MP3, WAV, or AAC audio and MP4 video for broad compatibility. Personal media is served locally by default. An explicit HTTPS path contacts the named host. A remote photo needs an appropriate CORS header to appear on the exported card. The card uses a rose illustration if the photo is missing, blocked, or too slow to load.
+For responsive photographs, set `width` to the original image’s pixel width and add smaller versions to `variants`. For example, a 1440 px original can include a 480 px and a 960 px WebP. A single photograph without variants works too. Use MP3, WAV, or AAC audio and MP4 video for broad compatibility. Personal media is served locally by default. An explicit HTTPS path contacts the named host. A remote photo needs an appropriate CORS header to appear on the exported card. The card uses the garden’s rose artwork if the photo is missing, blocked, or too slow to load. It preserves message paragraph breaks and grows taller to fit longer messages, up to 4096 pixels for the PNG. Messages beyond that size end with an ellipsis on the card and remain complete in the story.
 
 ### Personalization editor
 
@@ -75,7 +75,7 @@ The first scene targets at most 125 KiB gzipped JavaScript, 15 KiB gzipped CSS, 
 | `src/app/navigation/chapters.ts` | Chapter order, visual tone, and transition durations |
 | `src/app/navigation/reducer.ts` | Pure navigation state machine and stale-event protection |
 | `src/app/navigation/ChapterTransition.tsx` | Cover and uncover effects, completion, cancellation, and browser fallback |
-| `src/app/providers/AudioProvider.tsx` | Music consent, volume fading, track changes, ducking, and media lifecycle |
+| `src/app/providers/AudioProvider.tsx` | Music autoplay and first-interaction fallback, volume fades, track changes, and ducking |
 | `src/app/PersonalizationEditor.tsx` | Visual editor sections, draft validation, preview, and download |
 | `src/app/editor.css` | Responsive editor layout and form styles |
 | `src/app/personalization/StoryPanels.tsx` | Identity, chapter visibility, message, and theme forms |
@@ -106,7 +106,9 @@ The first scene targets at most 125 KiB gzipped JavaScript, 15 KiB gzipped CSS, 
 | `src/config/schema.ts` | Zod validation and inferred TypeScript types |
 | `src/hooks/useMotionPreference.ts` | Device and session motion preference |
 | `src/hooks/useVisibility.ts` | Browser tab visibility |
-| `src/lib/card.ts` | Local Canvas card rendering and PNG creation |
+| `src/lib/card.ts` | Card layout, local photograph loading, and PNG export |
+| `src/lib/cardArt.ts` | Parchment, botanical detail, arched portrait, and rose medallion |
+| `src/lib/cardTypography.ts` | Font loading, measured wrapping, and centered text placement |
 | `src/lib/dates.ts` | Calendar validation, time-zone comparison, and display |
 | `src/lib/gifts.ts` | Gift slots and unlock policy |
 | `src/styles/base.css` | Tailwind and CSS entry point |
@@ -119,11 +121,13 @@ The first scene targets at most 125 KiB gzipped JavaScript, 15 KiB gzipped CSS, 
 | `public/images/decorations/*.webp` | Original rosebud, rose, cake, fountain, sunset, and bouquet at responsive sizes |
 | `public/audio/rose-garden.wav` | Original synthesized instrumental demo |
 | `src/test/setup.ts` | Test environment initialization |
+| `src/test/fixtures/birthday.ts` | Demo configuration for automated checks |
 | `src/test/config.test.ts` | Validation and date tests |
 | `src/test/navigation.test.ts` | Reducer and unlock tests |
 | `src/test/components.test.tsx` | Component, input, focus, and fallback tests |
 | `e2e/story.spec.ts` | Full story, keyboard, responsiveness, axe, failure paths, and card export |
 | `e2e/personalize.spec.ts` | Editor fields, local attachments, story preview, and ZIP contents |
+| `e2e/audio.spec.ts` | Startup playback, first-click fallback, and the music switch |
 | `scripts/audit.mjs` | Repeatable mobile Lighthouse audit |
 | `BUILD-LOG.md` | Phase inventory, verification, and artwork provenance |
 

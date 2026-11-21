@@ -85,3 +85,57 @@ test('keeps the development editor out of the production build', async ({ page }
   await expect(page.getByRole('heading', { name: 'Personalize your garden' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Enter Our Garden' })).toBeVisible();
 });
+
+test('exports a centered card with a portrait, wrapped names and a long multi-paragraph message', async ({ page }) => {
+  const portrait = await readFile('public/images/decorations/rosebud-mobile.webp');
+  type InkLine = { text: string; x: number; left: number; right: number; top: number; bottom: number };
+  type InkWindow = Window & { cardInk: InkLine[] };
+  await page.addInitScript(() => {
+    const prototype = CanvasRenderingContext2D.prototype;
+    const fillText = prototype.fillText;
+    const ink: InkLine[] = [];
+    (window as unknown as InkWindow).cardInk = ink;
+    prototype.fillText = function (text, x, y, maxWidth) {
+      if (this.canvas.width === 1200) {
+        const metrics = this.measureText(text);
+        ink.push({ text, x, left: x - metrics.actualBoundingBoxLeft, right: x + metrics.actualBoundingBoxRight,
+          top: y - metrics.actualBoundingBoxAscent, bottom: y + metrics.actualBoundingBoxDescent });
+      }
+      if (maxWidth === undefined) fillText.call(this, text, x, y);
+      else fillText.call(this, text, x, y, maxWidth);
+    };
+  });
+  await page.goto(editorUrl);
+  await page.getByLabel('Her name').fill('Rosalind' + 'W'.repeat(60));
+  await page.getByLabel('Your name').fill('Alexandria' + 'm'.repeat(59));
+  const chapters = page.getByRole('group', { name: 'Chapters to include' }).getByRole('checkbox');
+  for (const chapter of (await chapters.all()).slice(0, -1)) await chapter.uncheck();
+  const sections = page.getByRole('navigation', { name: 'Personalization sections' });
+  await sections.getByRole('button', { name: 'Photos' }).click();
+  await page.getByLabel('Choose finale photo').setInputFiles({ name: 'Portrait.webp', mimeType: 'image/webp', buffer: portrait });
+  await sections.getByRole('button', { name: 'Messages' }).click();
+  await page.getByLabel('Final message').fill(
+    'First paragraph. ' + 'Here’s to quiet mornings, long walks, and the joy of being together. '.repeat(5)
+    + '\n\nSecond paragraph. ' + 'A garden full of roses for a year full of happy memories. '.repeat(5)
+    + 'The last words stay visible.',
+  );
+  await page.getByRole('button', { name: 'Preview story' }).click();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download Birthday Card' }).click();
+  const file = await (await download).path();
+  if (!file) throw new Error('No card was downloaded');
+  const png = await readFile(file);
+  expect(png.readUInt32BE(16)).toBe(1200);
+  const height = png.readUInt32BE(20);
+  expect(height).toBeGreaterThan(1600);
+  const ink = await page.evaluate(() => (window as unknown as InkWindow).cardInk);
+  expect(ink.map(({ text }) => text).join(' ')).toContain('The last words stay visible.');
+  expect(ink.length).toBeGreaterThan(15);
+  ink.forEach((line, index) => {
+    expect(line.x).toBe(600);
+    expect(line.left).toBeGreaterThan(100);
+    expect(line.right).toBeLessThan(1100);
+    expect(line.top).toBeGreaterThan(index ? ink[index - 1].bottom : 55);
+    expect(line.bottom).toBeLessThan(height - 75);
+  });
+});

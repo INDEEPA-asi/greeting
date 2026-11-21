@@ -118,7 +118,7 @@ function GardenStory({ config, invalid, previews }: { config: ValidatedBirthday;
   }
 
   return (
-    <AudioProvider tracks={configWithAssets.audio.tracks} selected={configWithAssets.audio.selected}>
+    <AudioProvider autoplay tracks={configWithAssets.audio.tracks} selected={configWithAssets.audio.selected}>
       <div className="garden" data-tone={active.tone} data-chapter={active.id} data-reduced={reduced} data-hidden={hidden} data-busy={busy} style={theme}>
         <a href="#chapter" className="visually-hidden-link" inert={busy}>Skip to chapter</a>
         <div inert={busy}><StoryHeader demo={config.demo} /></div>

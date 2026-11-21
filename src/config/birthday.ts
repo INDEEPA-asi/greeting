@@ -94,7 +94,7 @@ export const birthday: BirthdayConfig = {
       "title": "A Little Promise...❤️",
       "fallback": "I hope we always make time for the small things.",
       "type": "text",
-      "message": "Here’s to making time for the small things, and saying what matters while we have the chance."
+      "message": "I promise to value our differences and work on them until they become our strengths as a couple."
     },
     {
       "title": "Memories in short...❤️",

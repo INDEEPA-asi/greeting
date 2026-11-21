@@ -9,12 +9,12 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {
-      command: 'npm run preview -- --host localhost --port 4173 --strictPort',
+      command: 'npx vite build --mode test --outDir .test-dist && npm run preview -- --host localhost --port 4173 --strictPort --outDir .test-dist',
       url: 'http://localhost:4173',
       reuseExistingServer: !process.env.CI,
     },
     {
-      command: 'npm run dev -- --host localhost --port 4174 --strictPort',
+      command: 'npm run dev -- --mode test --host localhost --port 4174 --strictPort',
       url: 'http://localhost:4174/personalize',
       reuseExistingServer: !process.env.CI,
     },

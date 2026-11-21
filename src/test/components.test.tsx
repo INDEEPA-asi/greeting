@@ -47,6 +47,7 @@ describe('accessible controls', () => {
 
   it('only plays music after a deliberate action and exposes volume and track settings', async () => {
     const user = userEvent.setup();
+    vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
     const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
     vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
     vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => {});
@@ -72,7 +73,7 @@ describe('accessible controls', () => {
     const user = userEvent.setup();
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
-    render(<App />);
+    render(<App config={{ ...gardenConfig, audio: { tracks: [] } }} />);
     await user.click(screen.getByRole('button', { name: 'Skip intro' }));
     const heading = await screen.findByRole('heading', { name: 'Happy Birthday, My Love' });
     await waitFor(() => expect(heading).toHaveFocus());

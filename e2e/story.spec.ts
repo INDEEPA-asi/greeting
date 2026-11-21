@@ -32,7 +32,6 @@ test('full eight-chapter journey, real motion, gifts, wish and finale', async ({
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Music off' })).toHaveAttribute('aria-pressed', 'false');
   await page.getByRole('button', { name: 'Enter Our Garden' }).click();
   await expect(heading(page)).toHaveText('Happy Birthday, My Love');
   await expect(heading(page)).toBeFocused();
@@ -110,7 +109,9 @@ test.describe('reduced motion', () => {
     await close(page);
     await page.getByRole('button', { name: 'Open Something to Keep' }).click();
     await expect(page.getByRole('dialog')).toContainText('Wherever this year takes you');
-    expect(requests.filter((url) => /\/(audio|videos)\//.test(url))).toEqual([expect.stringContaining('rose-garden.wav')]);
+    const media = requests.filter((url) => /\/(audio|videos)\//.test(url));
+    expect(media.length).toBeGreaterThan(0);
+    expect(media.every((url) => url.endsWith('/audio/rose-garden.wav'))).toBe(true);
   });
 
   test('exports a valid local birthday card PNG', async ({ page }) => {
@@ -161,22 +162,6 @@ test('ignores rapid requests and can skip a running transition', async ({ page }
   await expect(heading(page)).toHaveText('Happy Birthday, My Love');
   await expect(heading(page)).toBeFocused();
   await expect(page.locator('.transition-layer')).toHaveCount(0);
-});
-
-test('plays the bundled track only on demand and navigates without Web Animations', async ({ page }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(Element.prototype, 'animate', { configurable: true, value: undefined });
-  });
-  await page.goto('/');
-  const music = page.locator('audio').first();
-  await expect(music).not.toHaveAttribute('src');
-  await page.getByRole('button', { name: 'Music off' }).click();
-  await expect.poll(() => music.evaluate((node: HTMLAudioElement) => node.currentTime)).toBeGreaterThan(0);
-  await page.getByRole('button', { name: 'Music on' }).click();
-  await expect.poll(() => music.evaluate((node: HTMLAudioElement) => node.paused)).toBe(true);
-  await page.getByRole('button', { name: 'Enter Our Garden' }).click();
-  await expect(heading(page)).toHaveText('Happy Birthday, My Love');
-  await expect(heading(page)).toBeFocused();
 });
 
 test('supports keyboard entry, gallery navigation, Escape and focus restoration', async ({ page }) => {
